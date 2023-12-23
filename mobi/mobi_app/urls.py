@@ -5,7 +5,7 @@ from .views import (UserList, UserDetail, ExerciseList, ExerciseDetail,
                     WorkoutSessionList, WorkoutSessionDetail, 
                     SessionExerciseList, SessionExerciseDetail, 
                     SetList, SetDetail, UserProgressDetail)
-
+from rest_framework.authtoken.views import obtain_auth_token
 urlpatterns = [
     # User URLs
     path('users/', UserList.as_view(), name='user-list'),
@@ -37,4 +37,6 @@ urlpatterns = [
 
     # User Progress URLs
     path('user_progress/', UserProgressDetail.as_view(), name='userprogress-detail'),
+
+    path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
 ]

@@ -10,4 +10,4 @@ class WorkoutTemplate(models.Model):
     # On delete specifies what happens when the reference user is deleted -> cascade means delete all associated workout templates if the User is deleted.
     name = models.CharField(max_length=255)
     description = models.TextField()
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
