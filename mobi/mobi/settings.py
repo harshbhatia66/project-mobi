@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'mobi_app',
-    'graphene_django',
     'rest_framework',
     'rest_framework.authtoken',
 ]
