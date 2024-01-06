@@ -34,14 +34,32 @@ class SessionExerciseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SessionExercise
-        fields = ['id', 'session', 'exercise', 'sets']
+        fields = ['id', 'exercise', 'sets']
 
-class WorkoutSessionSerializer(serializers.ModelSerializer):
+class WorkoutSessionReadSerializer(serializers.ModelSerializer):
     session_exercises = SessionExerciseSerializer(many=True, read_only=True)
 
     class Meta:
         model = WorkoutSession
         fields = ['id', 'user', 'workout_template', 'start_time', 'end_time', 'notes', 'session_exercises']
+
+class WorkoutSessionWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WorkoutSession
+        fields = ['workout_template', 'notes']
+
+    def create(self, validated_data):
+        # Create a new WorkoutSession object using the validated_data
+        workout_session = WorkoutSession.objects.create(**validated_data)
+
+        # Copy exercises from template to session
+        template_exercises = TemplateExercise.objects.filter(workout_template=validated_data['workout_template'])
+        for template_exercise in template_exercises:
+            SessionExercise.objects.create(
+                workout_session=workout_session,
+                exercise=template_exercise.exercise
+            )
+        return workout_session 
 
 class TemplateExerciseSerializer(serializers.ModelSerializer):
     # Include related exercise details
@@ -92,7 +110,7 @@ class WorkoutTemplateWriteSerializer(serializers.ModelSerializer):
     #     return instance
 
 class UserReadSerializer(serializers.ModelSerializer):
-    workout_sessions = WorkoutSessionSerializer(many=True, read_only=True)
+    workout_sessions = WorkoutSessionReadSerializer(many=True, read_only=True)
     user_progress = UserProgressSerializer(many=True, read_only=True)
     workout_templates = WorkoutTemplateReadSerializer(many=True, read_only=True)
 

@@ -1,7 +1,6 @@
 from django.urls import path
 from .views import (UserList, UserDetail, ExerciseList, ExerciseDetail, 
-                    WorkoutTemplateList, WorkoutTemplateDetail, 
-                    TemplateExerciseList, TemplateExerciseDetail, 
+                    WorkoutTemplateList, WorkoutTemplateDetail,
                     WorkoutSessionList, WorkoutSessionDetail, 
                     SessionExerciseList, SessionExerciseDetail, 
                     SetList, SetDetail, UserProgressDetail)
@@ -18,10 +17,6 @@ urlpatterns = [
     # Workout Template URLs
     path('workout_templates/', WorkoutTemplateList.as_view(), name='workouttemplate-list'),
     path('workout_templates/<int:pk>/', WorkoutTemplateDetail.as_view(), name='workouttemplate-detail'),
-
-    # Template Exercise URLs
-    path('template_exercises/', TemplateExerciseList.as_view(), name='templateexercise-list'),
-    path('template_exercises/<int:pk>/', TemplateExerciseDetail.as_view(), name='templateexercise-detail'),
 
     # Workout Session URLs
     path('workout_sessions/', WorkoutSessionList.as_view(), name='workoutsession-list'),
