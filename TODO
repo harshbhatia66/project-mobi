@@ -1,0 +1,12 @@
+In workout sessions model we only want one workout template:
+http://127.0.0.1:8000/api/workout_sessions/
+Not a list:
+{
+    "workout_template": [
+        "This field is required."
+    ]
+}
+
+# Go through all the variable names and correctly rename any plurals and '_ids'
+
+When an session exercise has sets for an exercise, update the exercise logs to have a 'previous' kg and reps

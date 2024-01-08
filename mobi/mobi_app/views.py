@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Exercise, WorkoutTemplate, WorkoutSession, SessionExercise, Set, UserProgress
-from .serializers import UserReadSerializer, UserWriteSerializer, ExerciseSerializer, WorkoutTemplateReadSerializer, WorkoutTemplateWriteSerializer, WorkoutSessionReadSerializer, WorkoutSessionWriteSerializer, SessionExerciseSerializer, SetSerializer, UserProgressSerializer
+from .serializers import UserReadSerializer, UserWriteSerializer, ExerciseSerializer, WorkoutTemplateReadSerializer, WorkoutTemplateWriteSerializer, SessionExerciseWriteSerializer, WorkoutSessionReadSerializer, WorkoutSessionWriteSerializer, SessionExerciseReadSerializer, SetSerializer, UserProgressSerializer
 from django.http import Http404
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
@@ -204,54 +204,53 @@ class WorkoutSessionDetail(APIView):
 
 class SessionExerciseList(APIView):
     permission_classes = [IsAuthenticated]
-    def get(self, request, format=None):
-        session_exercises = SessionExercise.objects.all()
-        serializer = SessionExerciseSerializer(session_exercises, many=True)
-        return Response(serializer.data)
 
-    def post(self, request, format=None):
-        workout_session_id = request.data.get('workout_session')
-
-        # Validate workout_session_id
-        if not workout_session_id:
-            return Response({"error": "Workout session ID is required."}, status=status.HTTP_400_BAD_REQUEST)
-
+    def get(self, request, workout_session_id, format=None):
         try:
-            workout_session = WorkoutSession.objects.get(id=workout_session_id)
+            workout_session = WorkoutSession.objects.get(pk=workout_session_id, user=request.user)
         except WorkoutSession.DoesNotExist:
             raise NotFound("Workout session not found.")
 
-        serializer = SessionExerciseSerializer(data=request.data, context={'workout_session': workout_session})
+        session_exercises = SessionExercise.objects.filter(workout_session=workout_session)
+        serializer = SessionExerciseReadSerializer(session_exercises, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, workout_session_id, format=None):
+        # Pass workout_session_id in the serializer context
+        serializer_context = {
+            'workout_session_id': workout_session_id,
+        }
+        serializer = SessionExerciseWriteSerializer(data=request.data, context=serializer_context)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
+            return Response({"message": "Session exercise successfully created."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class SessionExerciseDetail(APIView):
     permission_classes = [IsAuthenticated]
-    def get_object(self, pk, request):
+    def get_object(self, session_exercise_id):
         try:
-            return SessionExercise.objects.get(pk=pk)
+            return SessionExercise.objects.get(pk=session_exercise_id)
         except SessionExercise.DoesNotExist:
             raise Http404
     
-    def get(self, request, pk, format=None):
-        session_exercise = self.get_object(pk)
-        serializer = SessionExerciseSerializer(session_exercise)
+    def get(self, request, session_exercise_id, format=None):
+        session_exercise = self.get_object(session_exercise_id)
+        serializer = SessionExerciseReadSerializer(session_exercise)
         return Response(serializer.data)
     
-    def put(self, request, pk, format=None):
-        session_exercise = self.get_object(pk)
-        serializer = SessionExerciseSerializer(session_exercise, data=request.data)
+    def put(self, request, session_exercise_id, format=None):
+        session_exercise = self.get_object(session_exercise_id)
+        serializer = SessionExerciseWriteSerializer(session_exercise, data=request.data)
         if serializer.is_valid():
-            serializer.save(session=request.session)
-            return Response(serializer.data)
+            serializer.save()
+            return Response({"message": "Session exercise successfully updated."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    def delete(self, request, pk, format=None):
-        session_exercise = self.get_object(pk)
+    def delete(self, request, session_exercise_id, format=None):
+        session_exercise = self.get_object(session_exercise_id)
         session_exercise.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({"message": "Session exercise successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
     
 class SetList(APIView):
     permission_classes = [IsAuthenticated]

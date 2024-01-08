@@ -23,8 +23,8 @@ urlpatterns = [
     path('workout_sessions/<int:pk>/', WorkoutSessionDetail.as_view(), name='workoutsession-detail'),
 
     # Session Exercise URLs
-    path('session_exercises/', SessionExerciseList.as_view(), name='sessionexercise-list'),
-    path('session_exercises/<int:pk>/', SessionExerciseDetail.as_view(), name='sessionexercise-detail'),
+    path('workout_sessions/<int:workout_session_id>/session_exercises/', SessionExerciseList.as_view(), name='sessionexercise-list'),
+    path('session_exercises/<int:session_exercise_id>/', SessionExerciseDetail.as_view(), name='sessionexercise-detail'),
 
     # Set URLs
     path('sets/', SetList.as_view(), name='set-list'),

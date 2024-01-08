@@ -4,17 +4,24 @@ from rest_framework import serializers
 from .models import Exercise, WorkoutTemplate, TemplateExercise, WorkoutSession, SessionExercise, Set, UserProgress
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
+
+
 class SetSerializer(serializers.ModelSerializer):
+    """Serializer for the Set model"""
     class Meta:
         model = Set
         fields = '__all__'
 
+
 class UserProgressSerializer(serializers.ModelSerializer):
+    """Serializer for the UserProgress model"""
     class Meta:
         model = UserProgress
         fields = '__all__'
-        
+
+     
 class ExerciseSerializer(serializers.ModelSerializer):
+    """Serializer for the Exercise model"""
     class Meta:
         model = Exercise
         fields = '__all__'
@@ -28,16 +35,48 @@ class ExerciseSerializer(serializers.ModelSerializer):
         value = value.title()
         return value
 
-class SessionExerciseSerializer(serializers.ModelSerializer):
+
+class SessionExerciseReadSerializer(serializers.ModelSerializer):
+    """Serializer for the SessionExercise model - Read Only"""
     exercise = ExerciseSerializer(read_only=True)
-    sets = SetSerializer(many=True)
+    sets = SetSerializer(many=True, read_only=True)
 
     class Meta:
         model = SessionExercise
         fields = ['id', 'exercise', 'sets']
 
+class SessionExerciseWriteSerializer(serializers.ModelSerializer):
+    """Serializer for the SessionExercise model - Write Only"""
+    exercise_id = serializers.IntegerField()
+
+    class Meta:
+        model = SessionExercise
+        fields = ['exercise_id']
+
+    def create(self, validated_data):
+        exercise_id = validated_data.pop('exercise_id')
+        exercise = Exercise.objects.get(id=exercise_id)
+
+        # Retrieve workout_session_id from the context
+        workout_session_id = self.context['workout_session_id']
+        workout_session = WorkoutSession.objects.get(id=workout_session_id)
+
+        session_exercise = SessionExercise.objects.create(exercise=exercise, workout_session=workout_session)
+        return session_exercise
+
+    
+    def update(self, instance, validated_data):
+        instance.sets.all().delete()
+        exercise_id = validated_data.get('exercise_id')
+        instance.exercise = Exercise.objects.get(id=exercise_id)
+        instance.save()
+        return instance
+
+    
+
+
 class WorkoutSessionReadSerializer(serializers.ModelSerializer):
-    session_exercises = SessionExerciseSerializer(many=True, read_only=True)
+    session_exercises = SessionExerciseReadSerializer(many=True, read_only=True)
 
     class Meta:
         model = WorkoutSession
