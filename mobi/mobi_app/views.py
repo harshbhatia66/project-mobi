@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Exercise, WorkoutTemplate, WorkoutSession, SessionExercise, Set, UserProgress
-from .serializers import UserReadSerializer, UserWriteSerializer, ExerciseSerializer, WorkoutTemplateReadSerializer, WorkoutTemplateWriteSerializer, SessionExerciseWriteSerializer, WorkoutSessionReadSerializer, WorkoutSessionWriteSerializer, SessionExerciseReadSerializer, SetSerializer, UserProgressSerializer
+from .serializers import UserReadSerializer, UserWriteSerializer, ExerciseSerializer, WorkoutTemplateReadSerializer, WorkoutTemplateWriteSerializer, SessionExerciseWriteSerializer, WorkoutSessionReadSerializer, WorkoutSessionWriteSerializer, SessionExerciseReadSerializer, SetReadSerializer, SetWriteSerializer, UserProgressSerializer
 from django.http import Http404
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
@@ -25,9 +25,8 @@ class UserList(APIView):
     def post(self, request, format=None):
         serializer = UserWriteSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            read_serializer = UserReadSerializer(user)
-            return Response(read_serializer.data, status=status.HTTP_201_CREATED)
+            serializer.save()
+            return Response({"message": "User successfully created."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class UserDetail(APIView):
@@ -50,15 +49,19 @@ class UserDetail(APIView):
         serializer = UserWriteSerializer(user, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(UserReadSerializer(user).data)
+            # Return message in response and 201 CREATED status
+            return Response({"message": "User successfully updated."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
         user = self.get_object(pk)
         user.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({"message": "User successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
 
 class ExerciseList(APIView):
+    """
+    List all exercises, or create a new exercise.
+    """
     def get(self, request, format=None):
         exercises = Exercise.objects.all()
         serializer = ExerciseSerializer(exercises, many=True)
@@ -68,10 +71,13 @@ class ExerciseList(APIView):
         serializer = ExerciseSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response({"message": "Exercise successfully created."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ExerciseDetail(APIView):
+    """
+    Retrieve, update, or delete an exercise instance.
+    """
     def get_object(self, pk):
         try:
             return Exercise.objects.get(pk=pk)
@@ -88,7 +94,7 @@ class ExerciseDetail(APIView):
         serializer = ExerciseSerializer(exercise, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response({"message": "Exercise successfully updated."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def patch(self, request, pk, format=None):
@@ -96,16 +102,19 @@ class ExerciseDetail(APIView):
         serializer = ExerciseSerializer(exercise, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response({"message": "Exercise successfully updated."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
         exercise = self.get_object(pk)
         exercise.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({"message": "Exercise successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
 
 
 class WorkoutTemplateList(APIView):
+    """
+    List all workout templates, or create a new workout template.
+    """
     permission_classes = [IsAuthenticated]
     def get(self, request, format=None):
         # Filter templates by the requesting user
@@ -121,19 +130,18 @@ class WorkoutTemplateList(APIView):
         if serializer.is_valid():
             # If the data is valid, save the serializer and create a new WorkoutTemplate object
             # The user is set to the user making the request
-            workout_template = serializer.save(user=request.user)
+            serializer.save(user=request.user)
 
-            # Create a new instance of WorkoutTemplateReadSerializer with the created WorkoutTemplate object
-            read_serializer = WorkoutTemplateReadSerializer(workout_template)
-
-            # Return a response with the serialized WorkoutTemplate data and a 201 CREATED status
-            return Response(read_serializer.data, status=status.HTTP_201_CREATED)
+            return Response({"message": "Workout template successfully created."}, status=status.HTTP_201_CREATED)
 
         # If the data in the serializer is not valid, return a response with the serializer's errors and a 400 BAD REQUEST status
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class WorkoutTemplateDetail(APIView):
+    """
+    Retrieve, update, or delete a workout template instance.
+    """
     permission_classes = [IsAuthenticated]
     def get_object(self, pk, request):
         try:
@@ -152,16 +160,19 @@ class WorkoutTemplateDetail(APIView):
         serializer = WorkoutTemplateReadSerializer(workout_template, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response({"message": "Workout template successfully updated."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
         workout_template = self.get_object(pk, request)
         workout_template.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({"message": "Workout template successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
 
     
 class WorkoutSessionList(APIView):
+    """
+    List all workout sessions, or create a new workout session.
+    """
     permission_classes = [IsAuthenticated]
     def get(self, request, format=None):
         workout_sessions = WorkoutSession.objects.filter(user=request.user)
@@ -172,11 +183,13 @@ class WorkoutSessionList(APIView):
         serializer = WorkoutSessionWriteSerializer(data=request.data)
         if serializer.is_valid():
             workout_session = serializer.save(user=request.user)
-            read_serializer = WorkoutSessionReadSerializer(workout_session)
-            return Response(read_serializer.data, status=status.HTTP_201_CREATED)
+            return Response({"message": "Workout session successfully created.", "id": workout_session.id}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class WorkoutSessionDetail(APIView):
+    """
+    Retrieve, update, or delete a workout session instance.
+    """
     permission_classes = [IsAuthenticated]
     def get_object(self, pk, request):
         try:
@@ -194,15 +207,18 @@ class WorkoutSessionDetail(APIView):
         serializer = WorkoutSessionWriteSerializer(workout_session, data=request.data)
         if serializer.is_valid():
             serializer.save(user=request.user)
-            return Response(serializer.data)
+            return Response({"message": "Workout session successfully updated."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, pk, format=None):
         workout_session = self.get_object(pk, request)
         workout_session.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({"message": "Workout session successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
 
 class SessionExerciseList(APIView):
+    """
+    List all session exercises, or create a new session exercise.
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request, workout_session_id, format=None):
@@ -227,6 +243,9 @@ class SessionExerciseList(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class SessionExerciseDetail(APIView):
+    """
+    Retrieve, update, or delete a session exercise instance.
+    """
     permission_classes = [IsAuthenticated]
     def get_object(self, session_exercise_id):
         try:
@@ -253,46 +272,63 @@ class SessionExerciseDetail(APIView):
         return Response({"message": "Session exercise successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
     
 class SetList(APIView):
+    """
+    List all sets, or create a new set.
+    """
     permission_classes = [IsAuthenticated]
     def get(self, request, format=None):
         sets = Set.objects.all()
-        serializer = SetSerializer(sets, many=True)
+        serializer = SetReadSerializer(sets, many=True)
         return Response(serializer.data)
 
-    def post(self, request, format=None):
-        session_exercise_id = request.data.get('session_exercise')
-        session_exercise = SessionExercise.objects.get(id=session_exercise_id)
-        serializer = SetSerializer(data=request.data)
+    def post(self, request, session_exercise_id, format=None):
+        serializer_context = {
+            'session_exercise_id': session_exercise_id,
+        }
+        serializer = SetWriteSerializer(data=request.data, context=serializer_context)
         if serializer.is_valid():
-            serializer.save(session_exercise=session_exercise)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            serializer.save()
+            return Response({"message": "Set successfully created."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class SetDetail(APIView):
+    """
+    Retrieve, update, or delete a set instance.
+    """
     permission_classes = [IsAuthenticated]
-    def get_object(self, pk, request):
+    def get_object(self, set_id, request):
         try:
-            return Set.objects.get(pk=pk)
+            return Set.objects.get(pk=set_id)
         except Set.DoesNotExist:
             raise Http404
     
-    def get(self, request, pk, format=None):
-        set = self.get_object(pk)
-        serializer = SetSerializer(set)
+    def get(self, request, set_id, format=None):
+        set = self.get_object(set_id, request)
+        serializer = SetReadSerializer(set)
         return Response(serializer.data)
     
-    def put(self, request, pk, format=None):
-        set = self.get_object(pk)
-        serializer = SetSerializer(set, data=request.data)
+    def put(self, request, set_id, format=None):
+        set = self.get_object(set_id, request)
+        serializer = SetWriteSerializer(set, data=request.data)
         if serializer.is_valid():
-            serializer.save(session_exercise=request.session_exercise)
-            return Response(serializer.data)
+            serializer.save()
+            return Response({"message": "Set successfully updated."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    def delete(self, request, pk, format=None):
-        set = self.get_object(pk)
+    def patch(self, request, set_id, format=None):
+        set = self.get_object(set_id, request)
+        serializer = SetWriteSerializer(set, data=request.data, partial=True)  # Note the partial=True
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Set successfully updated."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    
+    def delete(self, request, set_id, format=None):
+        set = self.get_object(set_id, request)
         set.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({"message": "Set successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
     
 class UserProgressDetail(APIView):
 

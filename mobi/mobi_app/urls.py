@@ -27,8 +27,8 @@ urlpatterns = [
     path('session_exercises/<int:session_exercise_id>/', SessionExerciseDetail.as_view(), name='sessionexercise-detail'),
 
     # Set URLs
-    path('sets/', SetList.as_view(), name='set-list'),
-    path('sets/<int:pk>/', SetDetail.as_view(), name='set-detail'),
+    path('session_exercises/<int:session_exercise_id>/sets/', SetList.as_view(), name='set-list'),
+    path('sets/<int:set_id>/', SetDetail.as_view(), name='set-detail'),
 
     # User Progress URLs
     path('user_progress/', UserProgressDetail.as_view(), name='userprogress-detail'),

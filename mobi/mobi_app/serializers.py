@@ -6,12 +6,37 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 
 
-class SetSerializer(serializers.ModelSerializer):
-    """Serializer for the Set model"""
+class SetReadSerializer(serializers.ModelSerializer):
+    """Serializer for the Set model - Read Only"""
     class Meta:
         model = Set
-        fields = '__all__'
+        fields = ['id', 'reps', 'weight', 'duration', 'notes']
 
+
+class SetWriteSerializer(serializers.ModelSerializer):
+    """Serializer for the Set model - Write Only"""
+    class Meta:
+        model = Set
+        fields = ['reps', 'weight', 'duration', 'notes']
+
+    def create(self, validated_data):
+        # Retrieve session_exercise_id from the context
+        session_exercise_id = self.context['session_exercise_id']
+        session_exercise = SessionExercise.objects.get(id=session_exercise_id)
+
+        # Create a new Set object using the validated_data
+        set = Set.objects.create(session_exercise=session_exercise, **validated_data)
+        return set
+    
+    def update(self, instance, validated_data):
+        # Get the data from the validated_data, if not present, use the existing value
+        instance.reps = validated_data.get('reps', instance.reps)
+        instance.weight = validated_data.get('weight', instance.weight)
+        instance.duration = validated_data.get('duration', instance.duration)
+        instance.notes = validated_data.get('notes', instance.notes)
+        instance.save()
+        return instance
+    
 
 class UserProgressSerializer(serializers.ModelSerializer):
     """Serializer for the UserProgress model"""
@@ -39,7 +64,7 @@ class ExerciseSerializer(serializers.ModelSerializer):
 class SessionExerciseReadSerializer(serializers.ModelSerializer):
     """Serializer for the SessionExercise model - Read Only"""
     exercise = ExerciseSerializer(read_only=True)
-    sets = SetSerializer(many=True, read_only=True)
+    sets = SetReadSerializer(many=True, read_only=True)
 
     class Meta:
         model = SessionExercise
@@ -72,10 +97,8 @@ class SessionExerciseWriteSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-    
-
-
 class WorkoutSessionReadSerializer(serializers.ModelSerializer):
+    """Serializer for the WorkoutSession model - Read Only"""
     session_exercises = SessionExerciseReadSerializer(many=True, read_only=True)
 
     class Meta:
@@ -83,6 +106,7 @@ class WorkoutSessionReadSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'workout_template', 'start_time', 'end_time', 'notes', 'session_exercises']
 
 class WorkoutSessionWriteSerializer(serializers.ModelSerializer):
+    """Serializer for the WorkoutSession model - Write Only"""
     class Meta:
         model = WorkoutSession
         fields = ['workout_template', 'notes']
@@ -101,6 +125,7 @@ class WorkoutSessionWriteSerializer(serializers.ModelSerializer):
         return workout_session 
 
 class TemplateExerciseSerializer(serializers.ModelSerializer):
+    """Serializer for the TemplateExercise model"""
     # Include related exercise details
     exercise = ExerciseSerializer(read_only=True)
 
@@ -109,6 +134,7 @@ class TemplateExerciseSerializer(serializers.ModelSerializer):
         fields = ['id', 'workout_template', 'exercise']
 
 class WorkoutTemplateReadSerializer(serializers.ModelSerializer):
+    """Serializer for the WorkoutTemplate model - Read Only"""
     template_exercises = TemplateExerciseSerializer(many=True, read_only=True)
 
     class Meta:
@@ -117,6 +143,7 @@ class WorkoutTemplateReadSerializer(serializers.ModelSerializer):
 
 
 class WorkoutTemplateWriteSerializer(serializers.ModelSerializer):
+    """Serializer for the WorkoutTemplate model - Write Only"""
     exercise_ids = serializers.ListField(write_only=True, child=serializers.IntegerField())
 
     class Meta:
@@ -149,6 +176,7 @@ class WorkoutTemplateWriteSerializer(serializers.ModelSerializer):
     #     return instance
 
 class UserReadSerializer(serializers.ModelSerializer):
+    """Serializer for the User model - Read Only"""
     workout_sessions = WorkoutSessionReadSerializer(many=True, read_only=True)
     user_progress = UserProgressSerializer(many=True, read_only=True)
     workout_templates = WorkoutTemplateReadSerializer(many=True, read_only=True)
@@ -158,6 +186,7 @@ class UserReadSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'date_joined', 'workout_sessions', 'user_progress', 'workout_templates']
 
 class UserWriteSerializer(serializers.ModelSerializer):
+    """Serializer for the User model - Write Only"""
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'password', 'date_joined']
