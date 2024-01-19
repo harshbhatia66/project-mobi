@@ -49,7 +49,7 @@ class ExerciseSerializer(serializers.ModelSerializer):
     """Serializer for the Exercise model"""
     class Meta:
         model = Exercise
-        fields = '__all__'
+        fields = ['id', 'name', 'description', 'type']
 
     # validate_<field_name> is a method that is called when the serializer is validated
     # In this case name is the field name and this method is called and our function is defined

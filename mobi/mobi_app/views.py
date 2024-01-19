@@ -7,8 +7,8 @@ from .serializers import UserReadSerializer, UserWriteSerializer, ExerciseSerial
 from django.http import Http404
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
-# import not found
-from rest_framework.exceptions import NotFound
+
+from rest_framework.exceptions import NotFound, PermissionDenied
 # Create your views here.
 class UserList(APIView):
     """
@@ -63,52 +63,49 @@ class ExerciseList(APIView):
     List all exercises, or create a new exercise.
     """
     def get(self, request, format=None):
-        exercises = Exercise.objects.all()
+        # get exercises related to the requesting user
+        exercises = Exercise.objects.filter(user=request.user)
         serializer = ExerciseSerializer(exercises, many=True)
         return Response(serializer.data)
 
     def post(self, request, format=None):
         serializer = ExerciseSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(user=request.user)
             return Response({"message": "Exercise successfully created."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ExerciseDetail(APIView):
-    """
-    Retrieve, update, or delete an exercise instance.
-    """
-    def get_object(self, pk):
+    def get_object(self, pk, request):
         try:
-            return Exercise.objects.get(pk=pk)
+            exercise = Exercise.objects.get(pk=pk)
+            if exercise.user is None or exercise.user == request.user:
+                return exercise
+            raise PermissionDenied("You do not have permission to access this exercise.")
         except Exercise.DoesNotExist:
             raise Http404
 
     def get(self, request, pk, format=None):
-        exercise = self.get_object(pk)
+        exercise = self.get_object(pk, request)
         serializer = ExerciseSerializer(exercise)
         return Response(serializer.data)
 
     def put(self, request, pk, format=None):
-        exercise = self.get_object(pk)
+        exercise = self.get_object(pk, request)
         serializer = ExerciseSerializer(exercise, data=request.data)
         if serializer.is_valid():
+            if exercise.user is not None and exercise.user != request.user:
+                raise PermissionDenied("You cannot modify someone else's exercise.")
             serializer.save()
-            return Response({"message": "Exercise successfully updated."}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def patch(self, request, pk, format=None):
-        exercise = self.get_object(pk)
-        serializer = ExerciseSerializer(exercise, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"message": "Exercise successfully updated."}, status=status.HTTP_200_OK)
+            return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
-        exercise = self.get_object(pk)
+        exercise = self.get_object(pk, request)
+        if exercise.user is not None and exercise.user != request.user:
+            raise PermissionDenied("You cannot delete someone else's exercise.")
         exercise.delete()
-        return Response({"message": "Exercise successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class WorkoutTemplateList(APIView):
