@@ -1,3 +1,5 @@
+from datetime import timedelta
+from django.utils import timezone
 from django.test import TestCase
 from mobi_app.models import Exercise, WorkoutTemplate, TemplateExercise, WorkoutSession, SessionExercise, Set, UserProgress
 # import validation error
@@ -108,126 +110,13 @@ class BaseTest(TestCase):
         self.global_exercise_type_20 = "Core"
 
 
-        # Create a global exercise
-        self.global_exercise_01 = Exercise.objects.create(
-            name=self.global_exercise_name_01, 
-            description=self.global_exercise_description_01, 
-            type=self.global_exercise_type_01
-        )
-
-        self.global_exercise_02 = Exercise.objects.create(
-            name=self.global_exercise_name_02,
-            description=self.global_exercise_description_02,
-            type=self.global_exercise_type_02
-        )
-
-        self.global_exercise_03 = Exercise.objects.create(
-            name=self.global_exercise_name_03,
-            description=self.global_exercise_description_03,
-            type=self.global_exercise_type_03
-        )
-
-        self.global_exercise_04 = Exercise.objects.create(
-            name=self.global_exercise_name_04,
-            description=self.global_exercise_description_04,
-            type=self.global_exercise_type_04
-        )
-
-        self.global_exercise_05 = Exercise.objects.create(
-            name=self.global_exercise_name_05,
-            description=self.global_exercise_description_05,
-            type=self.global_exercise_type_05
-        )
-
-        self.global_exercise_06 = Exercise.objects.create(
-            name=self.global_exercise_name_06,
-            description=self.global_exercise_description_06,
-            type=self.global_exercise_type_06
-        )
-
-        self.global_exercise_07 = Exercise.objects.create(
-            name=self.global_exercise_name_07,
-            description=self.global_exercise_description_07,
-            type=self.global_exercise_type_07
-        )
-
-        self.global_exercise_08 = Exercise.objects.create(
-            name=self.global_exercise_name_08,
-            description=self.global_exercise_description_08,
-            type=self.global_exercise_type_08
-        )
-
-        self.global_exercise_09 = Exercise.objects.create(
-            name=self.global_exercise_name_09,
-            description=self.global_exercise_description_09,
-            type=self.global_exercise_type_09
-        )
-
-        self.global_exercise_10 = Exercise.objects.create(
-            name=self.global_exercise_name_10,
-            description=self.global_exercise_description_10,
-            type=self.global_exercise_type_10
-        )
-
-        self.global_exercise_11 = Exercise.objects.create(
-            name=self.global_exercise_name_11,
-            description=self.global_exercise_description_11,
-            type=self.global_exercise_type_11
-        )
-
-        self.global_exercise_12 = Exercise.objects.create(
-            name=self.global_exercise_name_12,
-            description=self.global_exercise_description_12,
-            type=self.global_exercise_type_12
-        )
-
-        self.global_exercise_13 = Exercise.objects.create(
-            name=self.global_exercise_name_13,
-            description=self.global_exercise_description_13,
-            type=self.global_exercise_type_13
-        )
-
-        self.global_exercise_14 = Exercise.objects.create(
-        name=self.global_exercise_name_14,
-        description=self.global_exercise_description_14,
-        type=self.global_exercise_type_14
-        )
-
-        self.global_exercise_15 = Exercise.objects.create(
-            name=self.global_exercise_name_15,
-            description=self.global_exercise_description_15,
-            type=self.global_exercise_type_15
-        )
-
-        self.global_exercise_16 = Exercise.objects.create(
-            name=self.global_exercise_name_16,
-            description=self.global_exercise_description_16,
-            type=self.global_exercise_type_16
-        )
-
-        self.global_exercise_17 = Exercise.objects.create(
-            name=self.global_exercise_name_17,
-            description=self.global_exercise_description_17,
-            type=self.global_exercise_type_17
-        )
-
-        self.global_exercise_18 = Exercise.objects.create(
-            name=self.global_exercise_name_18,
-            description=self.global_exercise_description_18,
-            type=self.global_exercise_type_18
-        )
-
-        self.global_exercise_19 = Exercise.objects.create(
-            name=self.global_exercise_name_19,
-            description=self.global_exercise_description_19,
-            type=self.global_exercise_type_19
-        )
-
-        self.global_exercise_20 = Exercise.objects.create(
-            name=self.global_exercise_name_20,
-            description=self.global_exercise_description_20,
-            type=self.global_exercise_type_20
-        )
+        for i in range(1, 21):
+            i_formatted = f'{i:02}'  # Formats the index to be two digits
+            setattr(self, f'global_exercise_{i_formatted}', Exercise.objects.create(
+                name=getattr(self, f'global_exercise_name_{i_formatted}'),
+                description=getattr(self, f'global_exercise_description_{i_formatted}'),
+                type=getattr(self, f'global_exercise_type_{i_formatted}')
+            ))
 
         # Create a user specific exercise
         self.user_exercise_01 = Exercise.objects.create(
@@ -268,6 +157,61 @@ class BaseTest(TestCase):
             description="A squat variation where the barbell is held in the crook of the elbows, challenging the core and upper back while working the legs.",
             type="Legs"
         )
+
+        self.workout_template_name_01 = "Chest and Back"
+        self.workout_template_description_01 = "A chest and back workout"
+
+        self.workout_template_name_02 = "Arms and Shoulders"
+        self.workout_template_description_02 = "An arms and shoulders workout"
+
+        self.workout_template_name_03 = "Legs and Core"
+        self.workout_template_description_03 = "A legs and core workout"
+
+        self.workout_template_name_04 = "Chest and Back Alt"
+        self.workout_template_description_04 = "A chest and back workout"
+
+        self.workout_template_name_05 = "Arms and Shoulders Alt"
+        self.workout_template_description_05 = "An arms and shoulders workout"
+
+        self.workout_template_name_06 = "Legs and Core Alt"
+        self.workout_template_description_06 = "A legs and core workout"
+
+        # Create the workout templates
+        self.workout_template_01 = WorkoutTemplate.objects.create(
+            user=self.user_01,
+            name=self.workout_template_name_01,
+            description=self.workout_template_description_01,
+        )
+
+        self.workout_template_02 = WorkoutTemplate.objects.create(
+            user=self.user_01,
+            name=self.workout_template_name_02,
+            description=self.workout_template_description_02,
+        )
+
+        self.workout_template_03 = WorkoutTemplate.objects.create(
+            user=self.user_01,
+            name=self.workout_template_name_03,
+            description=self.workout_template_description_03,
+        )
+
+        # List of global exercises
+        workout_template_01_exercises = [
+            self.global_exercise_01,
+            self.global_exercise_02,
+            self.global_exercise_03,
+            self.global_exercise_04,
+            self.global_exercise_05,
+            self.global_exercise_06,
+            self.global_exercise_07
+        ]
+
+        # Add exercises to workout template 01
+        for exercise in workout_template_01_exercises:
+            TemplateExercise.objects.create(
+                workout_template=self.workout_template_01,
+                exercise=exercise
+            )
 
 class ExerciseModelTest(BaseTest):
 
@@ -393,42 +337,6 @@ class WorkoutTemplateTest(BaseTest):
     def setUp(self):
         super().setUp()
 
-        self.workout_template_name_01 = "Chest and Back"
-        self.workout_template_description_01 = "A chest and back workout"
-
-        self.workout_template_name_02 = "Arms and Shoulders"
-        self.workout_template_description_02 = "An arms and shoulders workout"
-
-        self.workout_template_name_03 = "Legs and Core"
-        self.workout_template_description_03 = "A legs and core workout"
-
-        self.workout_template_name_04 = "Chest and Back Alt"
-        self.workout_template_description_04 = "A chest and back workout"
-
-        self.workout_template_name_05 = "Arms and Shoulders Alt"
-        self.workout_template_description_05 = "An arms and shoulders workout"
-
-        self.workout_template_name_06 = "Legs and Core Alt"
-        self.workout_template_description_06 = "A legs and core workout"
-
-        # Create the workout templates
-        self.workout_template_01 = WorkoutTemplate.objects.create(
-            user=self.user_01,
-            name=self.workout_template_name_01,
-            description=self.workout_template_description_01,
-        )
-
-        self.workout_template_02 = WorkoutTemplate.objects.create(
-            user=self.user_01,
-            name=self.workout_template_name_02,
-            description=self.workout_template_description_02,
-        )
-
-        self.workout_template_03 = WorkoutTemplate.objects.create(
-            user=self.user_01,
-            name=self.workout_template_name_03,
-            description=self.workout_template_description_03,
-        )
 
     def test_workout_template_creation(self):
         """
@@ -578,6 +486,538 @@ class WorkoutTemplateTest(BaseTest):
 
         # Assert that the number of WorkoutTemplate objects has increased by 1
         self.assertEqual(workout_template_count_after - workout_template_count_before, 1)
+    
+    def test_adding_template_exercise_to_workout_template(self):
+        """
+        Test adding a TemplateExercise to a WorkoutTemplate.
+        """
+        # Count the number of TemplateExercise objects before the creation
+        template_exercise_count_before = TemplateExercise.objects.count()
+
+        # Create a new TemplateExercise
+        TemplateExercise.objects.create(
+            workout_template=self.workout_template_01,
+            exercise=self.global_exercise_08
+        )
+
+        # Count the number of TemplateExercise objects after the creation
+        template_exercise_count_after = TemplateExercise.objects.count()
+
+        # Assert that the number of TemplateExercise objects has increased by 1
+        self.assertEqual(template_exercise_count_after - template_exercise_count_before, 1)
+
+    def test_workout_template_exercise_count(self):
+        """
+        Test the count of TemplateExercises in a WorkoutTemplate.
+        """
+        self.assertEqual(self.workout_template_01.template_exercises.count(), 7)
+
+    def test_remove_template_exercise_from_workout_template(self):
+        """
+        Test removing a TemplateExercise from a WorkoutTemplate.
+        """
+        # Count the number of TemplateExercise objects before the deletion
+        template_exercise_count_before = TemplateExercise.objects.count()
+
+        # Delete a TemplateExercise
+        self.workout_template_01.template_exercises.filter(exercise=self.global_exercise_01).delete()
+
+        # Count the number of TemplateExercise objects after the deletion
+        template_exercise_count_after = TemplateExercise.objects.count()
+
+        # Assert that the number of TemplateExercise objects has decreased by 1
+        self.assertEqual(template_exercise_count_before - template_exercise_count_after, 1)
+
+    def test_cascade_delete_workout_template_with_template_exercises(self):
+        """
+        Test that deleting a WorkoutTemplate also deletes associated TemplateExercises.
+        """
+        # Count the number of TemplateExercise objects before the deletion
+        template_exercise_count_before = TemplateExercise.objects.count()
+        
+        # Count the number of template exercises associated with the workout template
+        template_exercise_count_in_workout_template = self.workout_template_01.template_exercises.count()
+
+        # Delete the WorkoutTemplate
+        self.workout_template_01.delete()
+
+        # Count the number of TemplateExercise objects after the deletion
+        template_exercise_count_after = TemplateExercise.objects.count()
+
+        # Assert that the number of TemplateExercise objects has decreased
+        self.assertEqual(template_exercise_count_before - template_exercise_count_after, template_exercise_count_in_workout_template)
+
+    #Test that deleting a global exercise also deletes associated TemplateExercises and reduces workout template exercise count.
+    def test_cascade_delete_global_exercise_with_template_exercises(self):
+        """
+        Test that deleting a global exercise also deletes associated TemplateExercises and reduces workout template exercise count.
+        """
+        # Count the number of TemplateExercise objects before the deletion
+        template_exercise_count_before = TemplateExercise.objects.count()
+
+        # Count the number of template exercises associated with the workout template
+        template_exercise_count_in_workout_template = self.workout_template_01.template_exercises.count()
+
+        # Delete the global exercise
+        self.global_exercise_01.delete()
+
+        # Count the number of TemplateExercise objects after the deletion
+        template_exercise_count_after = TemplateExercise.objects.count()
+
+        # Assert that the number of TemplateExercise objects has decreased
+        self.assertEqual(template_exercise_count_before - template_exercise_count_after, 1)
+
+        template_exercise_count_in_workout_template_after = self.workout_template_01.template_exercises.count()
+
+        # Assert that the number of TemplateExercise objects associated with the workout template has decreased
+        self.assertEqual(template_exercise_count_in_workout_template - template_exercise_count_in_workout_template_after, 1)
+
+class TemplateExerciseTest(BaseTest):
+    def setUp(self):
+        super().setUp()
+
+    def test_template_exercise_creation(self):
+        """
+        Test creating a TemplateExercise and verify its properties.
+        """
+        # Count the number of TemplateExercise objects before the creation
+        template_exercise_count_before = TemplateExercise.objects.count()
+
+        # Create a new TemplateExercise
+        TemplateExercise.objects.create(
+            workout_template=self.workout_template_01,
+            exercise=self.global_exercise_08
+        )
+
+        # Count the number of TemplateExercise objects after the creation
+        template_exercise_count_after = TemplateExercise.objects.count()
+
+        # Assert that the number of TemplateExercise objects has increased by 1
+        self.assertEqual(template_exercise_count_after - template_exercise_count_before, 1)
+
+    def test_template_exercise_association_with_workout_template(self):
+        """
+        Test the association of a TemplateExercise with a WorkoutTemplate.
+        """
+        # Create a new TemplateExercise
+        template_exercise = TemplateExercise.objects.create(
+            workout_template=self.workout_template_01,
+            exercise=self.global_exercise_08
+        )
+
+        self.assertEqual(template_exercise.workout_template, self.workout_template_01)
+
+
+    def test_template_exercise_association_with_exercise(self):
+        """
+        Test the association of a TemplateExercise with an Exercise.
+        """
+        # Create a new TemplateExercise
+        template_exercise = TemplateExercise.objects.create(
+            workout_template=self.workout_template_01,
+            exercise=self.global_exercise_08
+        )
+
+        self.assertEqual(template_exercise.exercise, self.global_exercise_08)
+
+    def test_cascade_delete_on_workout_template_deletion(self):
+        """
+        Test that deleting a WorkoutTemplate deletes its associated TemplateExercises.
+        """
+        # Count the number of TemplateExercise objects before the deletion
+        template_exercise_count_before = TemplateExercise.objects.count()
+
+        # Count the number of template exercises associated with the workout template
+        template_exercise_count_in_workout_template = self.workout_template_01.template_exercises.count()
+
+        # Delete the WorkoutTemplate
+        self.workout_template_01.delete()
+
+        # Count the number of TemplateExercise objects after the deletion
+        template_exercise_count_after = TemplateExercise.objects.count()
+
+        # Assert that the number of TemplateExercise objects has decreased
+        self.assertEqual(template_exercise_count_before - template_exercise_count_after, template_exercise_count_in_workout_template)
+
+    def test_cascade_delete_on_exercise_deletion(self):
+        """
+        Test that deleting an Exercise deletes its associated TemplateExercises.
+        """
+        # Count the number of TemplateExercise objects before the deletion
+        template_exercise_count_before = TemplateExercise.objects.count()
+
+        # Count the number of template exercises associated with the workout template
+        template_exercise_count_in_workout_template = self.workout_template_01.template_exercises.count()
+
+        # Delete the Exercise
+        self.global_exercise_01.delete()
+
+        # Count the number of TemplateExercise objects after the deletion
+        template_exercise_count_after = TemplateExercise.objects.count()
+
+        # Assert that the number of TemplateExercise objects has decreased
+        self.assertEqual(template_exercise_count_before - template_exercise_count_after, 1)
+
+        template_exercise_count_in_workout_template_after = self.workout_template_01.template_exercises.count()
+
+        # Assert that the number of TemplateExercise objects associated with the workout template has decreased
+        self.assertEqual(template_exercise_count_in_workout_template - template_exercise_count_in_workout_template_after, 1)
+
+    def test_template_exercise_uniqueness_in_workout_template(self):
+        """
+        Test that the same exercise can be added multiple times to the same WorkoutTemplate.
+        """
+        # Count the number of TemplateExercise objects before the creation
+        template_exercise_count_before = TemplateExercise.objects.count()
+
+        # Count the number of template exercises associated with the workout template
+        template_exercise_count_in_workout_template = self.workout_template_01.template_exercises.count()
+
+        # Create a new TemplateExercise of the same exercise that already exists in the workout template
+        TemplateExercise.objects.create(
+            workout_template=self.workout_template_01,
+            exercise=self.global_exercise_01
+        )
+
+        # Count the number of TemplateExercise objects after the creation
+        template_exercise_count_after = TemplateExercise.objects.count()
+
+        # Assert that the number of TemplateExercise objects has increased by 1
+        self.assertEqual(template_exercise_count_after - template_exercise_count_before, 1)
+
+        # Assert that the number of TemplateExercise objects associated with the workout template has increased by 1
+        self.assertEqual(template_exercise_count_in_workout_template + 1, self.workout_template_01.template_exercises.count())
+
+
+    def test_template_exercise_ordering_within_workout_template(self):
+        """
+        Test if exercises within a WorkoutTemplate maintain a specific order, if applicable.
+        """
+        # Add three exercises to the workout template
+        TemplateExercise.objects.create(
+            workout_template=self.workout_template_01,
+            exercise=self.global_exercise_08
+        )
+
+        TemplateExercise.objects.create(
+            workout_template=self.workout_template_01,
+            exercise=self.global_exercise_09
+        )
+
+        TemplateExercise.objects.create(
+            workout_template=self.workout_template_01,
+            exercise=self.global_exercise_10
+        )
+
+        # Get the exercises in the workout template and check if they are in the correct order
+        exercises = self.workout_template_01.template_exercises.all()
+
+        # Check the order
+        for i in range(10):
+            i_formatted = f'{i+1:02}'  # Formats the index to be two digits
+            self.assertEqual(exercises[i].exercise, getattr(self, f'global_exercise_{i_formatted}'))
+
+    def test_template_exercise_visibility_to_different_users(self):
+        """
+        Test that a TemplateExercise is visible only to the user associated with the WorkoutTemplate.
+        """
+        # Assert that user 02 does not have any workout templates
+        self.assertEqual(self.user_02.workout_templates.count(), 0)
+
+        # Assert that user 02 cannot see user 01's workout template
+        self.assertEqual(self.user_02.workout_templates.filter(name=self.workout_template_name_01).count(), 0)
+
+        # Assert that user 01 can see their own workout template
+        self.assertEqual(self.user_01.workout_templates.filter(name=self.workout_template_name_01).count(), 1)
+
+        # Create a workout template for user 02 with the same name as user 01's workout template and add an exercise
+        user_02s_workout_template = WorkoutTemplate.objects.create(
+            user=self.user_02,
+            name=self.workout_template_name_01,
+            description=self.workout_template_description_01,
+        )
+
+        TemplateExercise.objects.create(
+            workout_template=user_02s_workout_template,
+            exercise=self.global_exercise_01
+        )
+
+        # Assert that user 02 cannot see user 01's template exercises by checking the count
+        self.assertEqual(self.user_02.workout_templates.filter(name=self.workout_template_name_01).first().template_exercises.count(), 1)
+
+        # Assert that user 01 can see their own template exercises
+        self.assertEqual(self.user_01.workout_templates.filter(name=self.workout_template_name_01).first().template_exercises.count(), 7)
+
+    def test_updating_template_exercise(self):
+        """
+        Test updating properties of a TemplateExercise.
+        """
+        # Get the first TemplateExercise in the workout template
+        template_exercise = self.workout_template_01.template_exercises.first()
+
+        # Update the exercise
+        template_exercise.exercise = self.global_exercise_08
+        template_exercise.save()
+
+        # Assert that the exercise has been updated
+        self.assertEqual(template_exercise.exercise, self.global_exercise_08)
+
+    def test_template_exercise_with_invalid_workout_template(self):
+        """
+        Test behavior when creating a TemplateExercise with an invalid or non-existent WorkoutTemplate.
+        """
+        # Assert error is raised when creating a TemplateExercise with an invalid WorkoutTemplate
+        with self.assertRaises(Exception):
+            TemplateExercise.objects.create(
+                workout_template=3,
+                exercise=self.global_exercise_08
+            ).full_clean()
+
+    def test_template_exercise_with_invalid_exercise(self):
+        """
+        Test behavior when creating a TemplateExercise with an invalid or non-existent Exercise.
+        """
+        # Assert error is raised when creating a TemplateExercise with an invalid Exercise
+        with self.assertRaises(Exception):
+            TemplateExercise.objects.create(
+                workout_template=self.workout_template_01,
+                exercise=3
+            ).full_clean()
+
+class WorkoutSessionTest(BaseTest):
+    def setUp(self):
+        super().setUp()
+        # Create a new WorkoutSession from the WorkoutTemplate
+        self.workout_session_01 = WorkoutSession.objects.create(
+            user=self.user_01,
+            workout_template=self.workout_template_01
+        )
+
+    def test_workout_session_creation(self):
+        """
+        Test creating a WorkoutSession and verifying its properties.
+        """
+
+        # Assert that the WorkoutSession created in the setup exists
+        self.assertIsNotNone(self.workout_session_01)
+
+    def test_workout_session_association_with_user(self):
+        """
+        Test the association of a WorkoutSession with a User.
+        """
+
+        # Assert that the WorkoutSession has been created and associated with user 01
+        self.assertEqual(self.workout_session_01.user, self.user_01)
+
+        # Assert that the WorkoutSession does not belong to user 02
+        self.assertNotEqual(self.workout_session_01.user, self.user_02)
+
+    def test_workout_session_association_with_workout_template(self):
+        """
+        Test the association of a WorkoutSession with a WorkoutTemplate.
+        """
+            
+        # Assert that the WorkoutSession has been created and associated with the workout template
+        self.assertEqual(self.workout_session_01.workout_template, self.workout_template_01)
+
+    def test_workout_session_start_time_auto_set(self):
+        """
+        Test that the start time is automatically set upon creating a WorkoutSession.
+        """
+        self.assertIsNotNone(self.workout_session_01.start_time)
+
+    def test_workout_session_end_time(self):
+        """
+        Test setting and retrieving the end time of a WorkoutSession.
+        """
+        # Assert that the end time is initially None
+        self.assertIsNone(self.workout_session_01.end_time)
+
+        # Set the end time
+        self.workout_session_01.end_time = timezone.now()
+        self.workout_session_01.save()
+
+        # Assert that the end time has been set
+        self.assertIsNotNone(self.workout_session_01.end_time)
+
+    def test_workout_session_notes_field(self):
+        """
+        Test the functionality of the notes field in a WorkoutSession.
+        """
+        # Create a workout session with notes
+        workout_session = WorkoutSession.objects.create(
+            user=self.user_01,
+            workout_template=self.workout_template_01,
+            notes="This is a test note."
+        )
+
+        # Assert that the notes field has been set
+        self.assertEqual(workout_session.notes, "This is a test note.")
+
+    def test_cascade_delete_on_user_deletion(self):
+        """
+        Test that deleting a User also deletes their WorkoutSessions.
+        """
+        # Count the number of WorkoutSession objects before the deletion
+        workout_session_count_before = WorkoutSession.objects.count()
+
+        # Count the number of workout sessions associated with the user
+        workout_session_count_for_user = self.user_01.workout_sessions.count()
+
+        # Delete the user
+        self.user_01.delete()
+
+        # Count the number of WorkoutSession objects after the deletion
+        workout_session_count_after = WorkoutSession.objects.count()
+
+        # Assert that the number of WorkoutSession objects has decreased
+        self.assertEqual(workout_session_count_before - workout_session_count_after, workout_session_count_for_user)
+
+    def test_cascade_delete_on_workout_template_deletion(self):
+        """
+        Test that deleting a WorkoutTemplate does not delete associated WorkoutSessions.
+        """
+        # Count the number of WorkoutSession objects before the deletion
+        workout_session_count_before = WorkoutSession.objects.count()
+
+        # Delete the WorkoutTemplate
+        self.workout_template_01.delete()
+
+        # Count the number of WorkoutSession objects after the deletion
+        workout_session_count_after = WorkoutSession.objects.count()
+
+        # Assert that the number of WorkoutSession objects has not decreased
+        self.assertEqual(workout_session_count_before, workout_session_count_after)
+        
+
+    def test_updating_workout_session(self):
+        """
+        Test updating various fields of an existing WorkoutSession.
+        """
+        # Update the workout session
+        self.workout_session_01.notes = "This is a test note."
+        self.workout_session_01.end_time = timezone.now()
+        self.workout_session_01.save()
+
+        # Assert that the workout session has been updated
+        self.assertEqual(self.workout_session_01.notes, "This is a test note.")
+        self.assertIsNotNone(self.workout_session_01.end_time)
+
+        # Update the fields again
+        self.workout_session_01.notes = "This is another test note."
+        # Set the end time as 2 hours after the start time
+        end_time = self.workout_session_01.start_time + timedelta(hours=2)
+        self.workout_session_01.end_time = end_time
+        self.workout_session_01.save()
+         
+        # Assert that the notes field has been updated
+        self.assertEqual(self.workout_session_01.notes, "This is another test note.")
+        # Assert that the end time has been updated
+        self.assertEqual(self.workout_session_01.end_time, end_time)
+
+    def test_workout_session_with_invalid_user(self):
+        """
+        Test creating a WorkoutSession with an invalid or non-existent user.
+        """
+        with self.assertRaises(Exception):
+            WorkoutSession.objects.create(
+                user=3,
+                workout_template=self.workout_template_01
+            ).full_clean()
+
+    def test_workout_session_with_invalid_workout_template(self):
+        """
+        Test creating a WorkoutSession with an invalid or non-existent WorkoutTemplate.
+        """
+        with self.assertRaises(Exception):
+            WorkoutSession.objects.create(
+                user=self.user_01,
+                workout_template=3
+            ).full_clean()
+
+    def test_workout_session_visibility_to_user(self):
+        """
+        Test that a WorkoutSession is visible only to the user who created it.
+        """
+        # Assert that user 02 does not have any workout sessions
+        self.assertEqual(self.user_02.workout_sessions.count(), 0)
+
+        # Assert that user 02 cannot see user 01's workout session
+        self.assertEqual(self.user_02.workout_sessions.filter(workout_template=self.workout_template_01).count(), 0)
+
+        # Assert that user 01 can see their own workout session
+        self.assertEqual(self.user_01.workout_sessions.filter(workout_template=self.workout_template_01).count(), 1)
+
+        # Create a workout template for user 02
+        user_02s_workout_template = WorkoutTemplate.objects.create(
+            user=self.user_02,
+            name=self.workout_template_name_01,
+            description=self.workout_template_description_01,
+        )
+
+        # Create a workout session for user 02
+        WorkoutSession.objects.create(
+            user=self.user_02,
+            workout_template=user_02s_workout_template
+        )
+
+        # Assert that user 02 cannot see user 01's workout session by checking the count
+        self.assertEqual(self.user_02.workout_sessions.filter(workout_template=self.workout_template_01).count(), 0)
+
+        # Assert that user 02 can see their own workout session
+        self.assertEqual(self.user_02.workout_sessions.filter(workout_template=user_02s_workout_template).count(), 1)
+
+        # Assert that user 01 can see their own workout session
+        self.assertEqual(self.user_01.workout_sessions.filter(workout_template=self.workout_template_01).count(), 1)
+
+    def test_concurrent_workout_sessions_for_user(self):
+        """
+        Test if a user is not allowed to have multiple concurrent workout sessions.
+        """
+        # Since there is already a workout session for user 01, try to create another one
+        with self.assertRaises(Exception):
+            WorkoutSession.objects.create(
+                user=self.user_01,
+                workout_template=self.workout_template_01
+            ).full_clean()
+
+        # End the first workout session
+        self.workout_session_01.end_time = timezone.now()
+
+        # Create another workout session for user 01
+        WorkoutSession.objects.create(
+            user=self.user_01,
+            workout_template=self.workout_template_01
+        ).full_clean()
+
+        # Assert that user 01 now has two workout sessions
+        self.assertEqual(self.user_01.workout_sessions.count(), 2)
+
+    def test_access_control_for_editing_workout_session(self):
+        """
+        Test that only the user who created the workout session can edit it.
+        """
+        # Assert that user 02 cannot edit user 01's workout session
+        with self.assertRaises(Exception):
+            self.user_02.workout_sessions.filter(workout_template=self.workout_template_01).first().save()
+
+        # Assert that user 01 can edit their own workout session
+        self.user_01.workout_sessions.filter(workout_template=self.workout_template_01).first().save()
+
+
+    def test_impact_of_workout_template_changes_on_active_sessions(self):
+        """
+        Test how changes to a WorkoutTemplate affect ongoing or future WorkoutSessions.
+        """
+        # Changing the workout template should not affect the workout session that has already started - it should still have the same exercises
+        # TODO: in endpoints and views
+        pass
+
+
+
+
+
+
 
 
 
