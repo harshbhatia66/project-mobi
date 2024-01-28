@@ -1,3 +1,4 @@
+from django.forms import ValidationError
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -7,9 +8,31 @@ from .serializers import UserReadSerializer, UserWriteSerializer, ExerciseSerial
 from django.http import Http404
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
-
+from .utils import verify_firebase_token
+import firebase_admin
+from firebase_admin import auth
 from rest_framework.exceptions import NotFound, PermissionDenied
 # Create your views here.
+class TestToken(APIView):
+    def post(self, request, format=None):
+        token = request.data.get('token')
+
+        try:
+            user = verify_firebase_token(token)
+            # If token is valid, return a success message with user details
+            print('Successfully verified token.')
+            return Response({
+                'message': 'Token is valid.',
+                'user_details': {
+                    'username': user.username,
+                    'firebase_uid': user.userprofile.firebase_uid
+                }
+            }, status=status.HTTP_200_OK)
+
+        except ValidationError as e:
+            # Handle the validation error
+            return Response({'error': str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+
 class UserList(APIView):
     """
     List all users, or create a new user.
@@ -63,8 +86,16 @@ class ExerciseList(APIView):
     List all exercises, or create a new exercise.
     """
     def get(self, request, format=None):
-        # get exercises related to the requesting user
-        exercises = Exercise.objects.filter(user=request.user)
+        token = request.headers.get('Authorization')
+        
+        try:
+            user = verify_firebase_token(token)
+        except ValidationError as e:
+            # Handle the validation error (e.g., invalid or expired token)
+            return Response({"error": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # If token is valid, proceed to fetch and serialize exercises
+        exercises = Exercise.objects.filter(user=user)
         serializer = ExerciseSerializer(exercises, many=True)
         return Response(serializer.data)
 
