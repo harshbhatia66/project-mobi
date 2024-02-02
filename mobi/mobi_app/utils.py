@@ -1,36 +1,29 @@
 from django.core.exceptions import ValidationError
+from django.http import JsonResponse
 from firebase_admin import auth
 from django.contrib.auth.models import User
-from .models import UserProfile
+from rest_framework.authtoken.models import Token
 
 def verify_firebase_token(token):
     try:
+        # Decode the Firebase token
         decoded_token = auth.verify_id_token(token)
         uid = decoded_token.get('uid')
+        email = decoded_token.get('email')
 
+        # Raise an error if UID is not in the token
         if not uid:
-            raise ValidationError('Firebase UID is missing in the token')
+            raise ValidationError('UID is missing in the Firebase token')
 
-        # Check if a UserProfile with this UID already exists
-        try:
-            user_profile = UserProfile.objects.get(firebase_uid=uid)
-            return user_profile.user
-        except UserProfile.DoesNotExist:
-            # Check if a User with the given username (Firebase UID) exists
-            user, user_created = User.objects.get_or_create(username=uid)
-            if user_created:
-                print('Creating a new user')
-            else:
-                print('User already exists')
+        # Check if a User with the given UID already exists
+        user, created = User.objects.get_or_create(username=uid, defaults={'email': email})
+        if created:
+            print('Creating a new user with UID:', uid)
+        else:
+            print('User with UID already exists:', uid)
 
-            # Create or link the UserProfile
-            user_profile, profile_created = UserProfile.objects.get_or_create(user=user, defaults={'firebase_uid': uid})
-            if profile_created:
-                print('Creating a new user profile')
-            else:
-                print('User profile already exists')
-            
-            return user
+        django_token = create_or_get_django_token(user)
+        return django_token
 
     except auth.InvalidIdTokenError:
         print('Invalid Firebase token')
@@ -38,3 +31,7 @@ def verify_firebase_token(token):
     except Exception as e:
         print(f'Error verifying Firebase token: {str(e)}')
         raise ValidationError(f'Error verifying Firebase token: {str(e)}')
+    
+def create_or_get_django_token(user):
+    token, _ = Token.objects.get_or_create(user=user)
+    return token.key

@@ -325,10 +325,10 @@ class ExerciseModelTest(BaseTest):
 
     # Test for when a user creates a new user specific exercise with the same name as a global exercise, this should not be allowed and should raise an error
     def test_user_exercise_name_uniqueness(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValidationError):
             Exercise.objects.create(
                 user=self.user_01,
-                name=self.global_exercise_01,
+                name=self.global_exercise_name_01,
                 description=self.global_exercise_description_01,
                 type=self.global_exercise_type_01
             )

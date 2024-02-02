@@ -12,21 +12,24 @@ from .utils import verify_firebase_token
 import firebase_admin
 from firebase_admin import auth
 from rest_framework.exceptions import NotFound, PermissionDenied
+from django.db.models import Q
+import logging
+
+logger = logging.getLogger(__name__)
+
 # Create your views here.
 class TestToken(APIView):
     def post(self, request, format=None):
         token = request.data.get('token')
 
         try:
-            user = verify_firebase_token(token)
+            django_token = verify_firebase_token(token)
             # If token is valid, return a success message with user details
             print('Successfully verified token.')
+            print('Django Token', django_token)
             return Response({
                 'message': 'Token is valid.',
-                'user_details': {
-                    'username': user.username,
-                    'firebase_uid': user.userprofile.firebase_uid
-                }
+                'token': django_token,
             }, status=status.HTTP_200_OK)
 
         except ValidationError as e:
@@ -37,6 +40,7 @@ class UserList(APIView):
     """
     List all users, or create a new user.
     """
+    permission_classes = [IsAuthenticated]
     def get(self, request, format=None):
         # Get all users
         users = User.objects.all()
@@ -56,6 +60,7 @@ class UserDetail(APIView):
     """
     Retrieve, update, or delete a user instance.
     """
+    permission_classes = [IsAuthenticated]
     def get_object(self, pk):
         try:
             return User.objects.get(pk=pk)
@@ -86,16 +91,8 @@ class ExerciseList(APIView):
     List all exercises, or create a new exercise.
     """
     def get(self, request, format=None):
-        token = request.headers.get('Authorization')
-        
-        try:
-            user = verify_firebase_token(token)
-        except ValidationError as e:
-            # Handle the validation error (e.g., invalid or expired token)
-            return Response({"error": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
-
-        # If token is valid, proceed to fetch and serialize exercises
-        exercises = Exercise.objects.filter(user=user)
+        # get exercises related to the requesting user and public exercises
+        exercises = Exercise.objects.filter(Q(user=request.user) | Q(user__isnull=True)).order_by('name')
         serializer = ExerciseSerializer(exercises, many=True)
         return Response(serializer.data)
 
@@ -104,7 +101,10 @@ class ExerciseList(APIView):
         if serializer.is_valid():
             serializer.save(user=request.user)
             return Response({"message": "Exercise successfully created."}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # Customize the error response
+            errors = {"errors": serializer.errors, "message": "There was a problem creating the exercise."}
+            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ExerciseDetail(APIView):
     def get_object(self, pk, request):
