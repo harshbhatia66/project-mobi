@@ -14,7 +14,7 @@ from firebase_admin import auth
 from rest_framework.exceptions import NotFound, PermissionDenied
 from django.db.models import Q
 import logging
-
+from .forms import ExerciseForm
 logger = logging.getLogger(__name__)
 
 # Create your views here.
@@ -90,21 +90,28 @@ class ExerciseList(APIView):
     """
     List all exercises, or create a new exercise.
     """
+    permission_classes = [IsAuthenticated]
     def get(self, request, format=None):
         # get exercises related to the requesting user and public exercises
         exercises = Exercise.objects.filter(Q(user=request.user) | Q(user__isnull=True)).order_by('name')
-        serializer = ExerciseSerializer(exercises, many=True)
+        serializer = ExerciseSerializer(exercises, many=True, context={'request': request})
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = ExerciseSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(user=request.user)
-            return Response({"message": "Exercise successfully created."}, status=status.HTTP_201_CREATED)
-        else:
-            # Customize the error response
-            errors = {"errors": serializer.errors, "message": "There was a problem creating the exercise."}
-            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+        # Create a form instance with POST data and FILES for handling file uploads
+        form = ExerciseForm(request.POST, request.FILES)
+
+        if not form.is_valid():
+            # If the form is not valid, return the form errors
+            return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+        # Save the form, but before committing to the database, modify the Exercise instance
+        exercise = form.save(commit=False)
+        exercise.user = request.user  # Set the user to the request's user
+        exercise.save()  # Now save the Exercise instance to the database
+
+        # Optionally, serialize the exercise instance to return it in the response
+        serializer = ExerciseSerializer(exercise)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class ExerciseDetail(APIView):
     def get_object(self, pk, request):

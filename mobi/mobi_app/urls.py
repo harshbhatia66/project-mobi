@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from .views import (UserList, UserDetail, ExerciseList, ExerciseDetail, 
                     WorkoutTemplateList, WorkoutTemplateDetail,
                     WorkoutSessionList, WorkoutSessionDetail, 
@@ -6,6 +6,9 @@ from .views import (UserList, UserDetail, ExerciseList, ExerciseDetail,
                     SetList, SetDetail, UserProgressDetail,
                     TestToken)
 from rest_framework.authtoken.views import obtain_auth_token
+from django.conf import settings
+from django.conf.urls.static import static
+
 urlpatterns = [
     # User URLs
     path('users/', UserList.as_view(), name='user-list'),
@@ -36,4 +39,4 @@ urlpatterns = [
 
     path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
     path('test-token/', TestToken.as_view(), name='test-token'),
-]
+] 

@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import firebase_admin
 from firebase_admin import credentials
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 cred_path = BASE_DIR / 'mobi' / 'sak.json'  # Adjust the path as needed
@@ -47,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
+    'storages',
 ]
 
 REST_FRAMEWORK = {
@@ -164,3 +166,20 @@ LOGGING = {
         },
     },
 }
+
+
+AWS_ACCESS_KEY_ID = 'AKIA5FTZAJYUV3PNTC5I'
+AWS_SECRET_ACCESS_KEY = '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'
+AWS_STORAGE_BUCKET_NAME = 'mobiflexon'
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+
+AWS_STATIC_LOCATION = 'static'
+STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STATIC_LOCATION}/'
+STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+AWS_MEDIA_LOCATION = 'media'
+MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_MEDIA_LOCATION}/'
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'

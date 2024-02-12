@@ -3,6 +3,8 @@ from django.http import JsonResponse
 from firebase_admin import auth
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
+import boto3
+from django.conf import settings
 
 def verify_firebase_token(token):
     try:
@@ -35,3 +37,17 @@ def verify_firebase_token(token):
 def create_or_get_django_token(user):
     token, _ = Token.objects.get_or_create(user=user)
     return token.key
+
+
+
+def generate_presigned_url(object_key):
+    s3_client = boto3.client('s3',
+                             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                             region_name='ap-southeast-2')  
+
+    presigned_url = s3_client.generate_presigned_url('get_object',
+                                                     Params={'Bucket': settings.AWS_STORAGE_BUCKET_NAME,
+                                                             'Key': object_key},
+                                                     ExpiresIn=3600)  # URL expires in 1 hour
+    return presigned_url

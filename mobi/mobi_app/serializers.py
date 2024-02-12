@@ -4,7 +4,7 @@ from rest_framework import serializers
 from .models import Exercise, WorkoutTemplate, TemplateExercise, WorkoutSession, SessionExercise, Set, UserProgress
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
-
+from .utils import generate_presigned_url
 
 class SetReadSerializer(serializers.ModelSerializer):
     """Serializer for the Set model - Read Only"""
@@ -47,18 +47,30 @@ class UserProgressSerializer(serializers.ModelSerializer):
      
 class ExerciseSerializer(serializers.ModelSerializer):
     """Serializer for the Exercise model"""
+    image_url = serializers.SerializerMethodField()  # Add this line
+    gif_url = serializers.SerializerMethodField()  # Add this line
+    
     class Meta:
         model = Exercise
-        fields = ['id', 'name', 'description', 'type']
+        fields = ['id', 'name', 'description', 'type', 'function', 'equipment_type', 'image', 'gif', 'instructions', 'history', 'image_url', 'gif_url']
 
-    # validate_<field_name> is a method that is called when the serializer is validated
-    # In this case name is the field name and this method is called and our function is defined
-    # To capitalize each word in the name
 
     def validate_name(self, value):
         # Capitalize each word in the name
         value = value.title()
         return value
+    
+    def get_image_url(self, obj):
+        if obj.image:
+            signed_url = generate_presigned_url(str(obj.image))
+            return signed_url
+        return None
+
+
+    def get_gif_url(self, obj):
+        if obj.gif:
+            return generate_presigned_url(str(obj.gif))
+        return None
 
 
 class SessionExerciseReadSerializer(serializers.ModelSerializer):
