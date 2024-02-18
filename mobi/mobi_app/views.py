@@ -137,6 +137,16 @@ class ExerciseDetail(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def patch(self, request, pk, format=None):
+        exercise = self.get_object(pk, request)
+        serializer = ExerciseSerializer(exercise, data=request.data, partial=True)
+        if serializer.is_valid():
+            if exercise.user is not None and exercise.user != request.user:
+                raise PermissionDenied("You cannot modify someone else's exercise.")
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
         exercise = self.get_object(pk, request)
